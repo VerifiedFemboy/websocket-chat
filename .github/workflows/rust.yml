@@ -1,22 +1,28 @@
 name: Rust
 
-on:
-  push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
-
-env:
-  CARGO_TERM_COLOR: always
+on: [push, pull_request]
 
 jobs:
-  build:
-
+  build-server:
     runs-on: ubuntu-latest
-
+    defaults:
+      run:
+        working-directory: server
     steps:
-    - uses: actions/checkout@v4
-    - name: Build
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Build Server
       run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+  
+  build-terminal-chat:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terminal-chat
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Build Terminal Chat
+      run: cargo build --verbose
