@@ -66,7 +66,6 @@ impl LoginFrame {
             frame.render_widget(login_text, outer_layout[0]);
             frame.render_widget(password_text, outer_layout[1]);
 
-            
             let pass_visibility_info = Paragraph::new(
             if self.password_visible {
                 "Password is Visible"
@@ -98,6 +97,10 @@ impl LoginFrame {
         } else {
             self.password.pop();
         }
+    }
+
+    pub fn submit(&self) {
+        
     }
 
     pub fn toggle_password_visibility(&mut self) {

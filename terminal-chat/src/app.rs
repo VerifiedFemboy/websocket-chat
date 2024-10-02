@@ -2,12 +2,13 @@ use crossterm::event::{self, Event, KeyCode};
 use ratatui::DefaultTerminal;
 use std::{io::Result, time::Duration};
 
-use crate::widgets::login_frame::LoginFrame;
+use crate::{database::Database, widgets::login_frame::LoginFrame};
 
 pub struct App {
     terminal: DefaultTerminal,
     exit: bool,
     app_state: AppState,
+    database: Option<Database>,
 }
 
 impl App {
@@ -17,6 +18,7 @@ impl App {
             terminal,
             exit: false,
             app_state: AppState::Login(LoginFrame::new()),
+            database: None,
         }
     }
 
@@ -41,7 +43,6 @@ impl App {
             }
         });
     }
-
 
     fn handle_input(&mut self) {
         if event::poll(Duration::from_millis(100)).unwrap() {
@@ -85,6 +86,16 @@ impl App {
                         match self.app_state {
                             AppState::Login(ref mut login_frame) => {
                                 login_frame.toggle_password_visibility();
+                            },
+                            AppState::Chat => {
+
+                            }
+                        }
+                    },
+                    KeyCode::Enter => {
+                        match self.app_state {
+                            AppState::Login(ref mut login_frame) => {
+                                login_frame.submit();
                             },
                             AppState::Chat => {
 

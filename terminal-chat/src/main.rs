@@ -2,6 +2,7 @@ use app::App;
 
 mod app;
 mod widgets;
+mod database;
 
 #[tokio::main]
 async fn main() {
