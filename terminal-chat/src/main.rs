@@ -1,7 +1,7 @@
 use app::App;
 
-
 mod app;
+mod widgets;
 
 #[tokio::main]
 async fn main() {
