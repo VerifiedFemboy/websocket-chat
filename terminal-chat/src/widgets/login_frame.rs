@@ -111,20 +111,7 @@ impl LoginFrame {
     }
 
     pub async fn submit(&self, app: &mut App) -> std::result::Result<(), String> {
-        if let Some(db) = &app.database {
-            db.new(String::from("mongodb://localhost:27017"));
-
-            match db.connect().await {
-                Ok(_) => {
-                    return Ok(());
-                },
-                Err(_) => {
-                    return Err("Failed to connect to database".to_string());
-                }
-                
-            };
-        }
-        Err("Failed to connect to database".to_string())
+        Ok(())
     }
 
     pub fn toggle_password_visibility(&mut self) {

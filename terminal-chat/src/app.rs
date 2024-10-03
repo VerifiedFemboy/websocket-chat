@@ -2,13 +2,12 @@ use crossterm::event::{self, Event, KeyCode};
 use ratatui::DefaultTerminal;
 use std::{io::Result, time::Duration};
 
-use crate::{database::Database, widgets::{chat_frame::ChatFrame, login_frame::LoginFrame}};
+use crate::widgets::{chat_frame::ChatFrame, login_frame::LoginFrame};
 
 pub struct App {
     terminal: DefaultTerminal,
     exit: bool,
     app_state: AppState,
-    pub database: Option<Database>,
 }
 
 impl App {
@@ -18,7 +17,6 @@ impl App {
             terminal,
             exit: false,
             app_state: AppState::Login(LoginFrame::new()),
-            database: None,
         }
     }
 
