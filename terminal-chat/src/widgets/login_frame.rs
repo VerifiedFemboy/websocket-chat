@@ -3,11 +3,14 @@ use std::iter::repeat;
 use crossterm::style::Color;
 use ratatui::{layout::{self, Alignment, Constraint, Layout, Rect}, style::Stylize, widgets::{Block, Borders, Paragraph}, Frame};
 
+use crate::app::App;
+
 pub struct LoginFrame {
     pub username: String,
     pub password: String,
     pub focus: bool,
     pub password_visible: bool,
+    pub error_message: Option<String>,
 }
 
 impl LoginFrame {
@@ -18,6 +21,7 @@ impl LoginFrame {
             password: String::new(),
             focus: true,
             password_visible: false,
+            error_message: None,
         }
     }
 
@@ -76,6 +80,13 @@ impl LoginFrame {
             frame.render_widget(pass_visibility_info, Rect::new(0, 0, size.width, 1));
             
 
+            if let Some(error_msg) = self.error_message.clone() {
+                let error_text = Paragraph::new(error_msg)
+                    .alignment(Alignment::Center)
+                    .fg(Color::Red);
+                frame.render_widget(error_text, Rect::new(0, 1, size.width, 1));
+            }
+
             let help_text = Paragraph::new("Press Tab to switch fields, Enter to submit, and F1 to toggle password visibility")
             .alignment(Alignment::Center);
 
@@ -99,11 +110,31 @@ impl LoginFrame {
         }
     }
 
-    pub fn submit(&self) {
-        
+    pub async fn submit(&self, app: &mut App) -> std::result::Result<(), String> {
+        if let Some(db) = &app.database {
+            db.new(String::from("mongodb://localhost:27017"));
+
+            match db.connect().await {
+                Ok(_) => {
+                    return Ok(());
+                },
+                Err(_) => {
+                    return Err("Failed to connect to database".to_string());
+                }
+                
+            };
+        }
+        Err("Failed to connect to database".to_string())
     }
 
     pub fn toggle_password_visibility(&mut self) {
         self.password_visible = !self.password_visible;
     }
+}
+
+impl Default for LoginFrame {
+    fn default() -> Self {
+        Self::new()
+    }
+    
 }

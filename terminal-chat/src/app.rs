@@ -2,13 +2,13 @@ use crossterm::event::{self, Event, KeyCode};
 use ratatui::DefaultTerminal;
 use std::{io::Result, time::Duration};
 
-use crate::{database::Database, widgets::login_frame::LoginFrame};
+use crate::{database::Database, widgets::{chat_frame::ChatFrame, login_frame::LoginFrame}};
 
 pub struct App {
     terminal: DefaultTerminal,
     exit: bool,
     app_state: AppState,
-    database: Option<Database>,
+    pub database: Option<Database>,
 }
 
 impl App {
@@ -25,7 +25,7 @@ impl App {
     pub async fn run(&mut self) -> Result<()> {
         while !self.exit {
             self.render_tui();
-            self.handle_input();
+            self.handle_input().await;
         }
         Ok(())
     }
@@ -36,15 +36,15 @@ impl App {
                 AppState::Login(ref login_frame) => {
                     login_frame.render(frame);
                 },
-                AppState::Chat => {
-
+                AppState::Chat(ref chat_frame) => {
+                    chat_frame.render(frame);
                 }
                 
             }
         });
     }
 
-    fn handle_input(&mut self) {
+    async fn handle_input(&mut self) {
         if event::poll(Duration::from_millis(100)).unwrap() {
             if let Event::Key(key_event) = event::read().unwrap() {
                 match key_event.code {
@@ -56,8 +56,8 @@ impl App {
                             AppState::Login(ref mut login_frame) => {
                                 login_frame.input(c);
                             },
-                            AppState::Chat => {
-
+                            AppState::Chat(ref mut chat_frame) => {
+                                chat_frame.input(c);
                             }
                         }
                     },
@@ -67,7 +67,7 @@ impl App {
                             AppState::Login(ref mut login_frame) => {
                                 login_frame.focus = !login_frame.focus;
                             },
-                            AppState::Chat => {
+                            AppState::Chat(ref mut _chat_frame ) => {
 
                             }
                         }
@@ -77,8 +77,8 @@ impl App {
                             AppState::Login(ref mut login_frame) => {
                                 login_frame.backspace();
                             },
-                            AppState::Chat => {
-
+                            AppState::Chat(ref mut chat_frame) => {
+                                chat_frame.backspace();
                             }
                         }
                     },
@@ -87,19 +87,21 @@ impl App {
                             AppState::Login(ref mut login_frame) => {
                                 login_frame.toggle_password_visibility();
                             },
-                            AppState::Chat => {
+                            AppState::Chat(ref mut _chat_frame) => {
 
                             }
                         }
                     },
                     KeyCode::Enter => {
-                        match self.app_state {
-                            AppState::Login(ref mut login_frame) => {
-                                login_frame.submit();
-                            },
-                            AppState::Chat => {
-
-                            }
+                        if let AppState::Login(ref mut login_frame) = self.app_state {
+                            let mut login_frame = std::mem::take(login_frame);
+                            match login_frame.submit(self).await {
+                                Ok(_) => {
+                                    self.app_state = AppState::Chat(ChatFrame::new());
+                                },
+                                Err(err) => login_frame.error_message = Some(err),
+                            };
+                            
                         }
                     },
                     _ => {}
@@ -111,6 +113,6 @@ impl App {
 
 enum AppState {
     Login(LoginFrame),
-    Chat,
+    Chat(ChatFrame),
     
 }
