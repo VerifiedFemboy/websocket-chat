@@ -65,8 +65,8 @@ impl App {
                             AppState::Login(ref mut login_frame) => {
                                 login_frame.focus = !login_frame.focus;
                             },
-                            AppState::Chat(ref mut _chat_frame ) => {
-
+                            AppState::Chat(ref mut chat_frame ) => {
+                                chat_frame.change_focus();
                             }
                         }
                     },
@@ -99,7 +99,8 @@ impl App {
                                 },
                                 Err(err) => login_frame.error_message = Some(err),
                             };
-                            
+                        } else if let AppState::Chat(ref mut chat_frame) = self.app_state {
+                            chat_frame.submit_message();   
                         }
                     },
                     _ => {}
