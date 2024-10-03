@@ -1,5 +1,6 @@
-use mongodb::{error::Result, options::ClientOptions, Client};
+use mongodb::{bson, error::Result, options::ClientOptions, Client};
 
+#[derive(Clone)]
 pub struct Database {
     client: Option<Client>,
     connection: String,
@@ -7,7 +8,7 @@ pub struct Database {
 
 impl Database {
     
-    pub fn new(&self, connection: String) -> Self {
+    pub fn new(connection: String) -> Self {
         Self {
             client: None,
             connection,
@@ -30,5 +31,15 @@ impl Database {
             },
             None => None,
         }
+    }
+
+    pub fn get_collection(&self, database_name: &str, collection_nanme: &str) -> Option<mongodb::Collection<bson::Document>> {
+        match &self.client {
+            Some(client) => {
+                Some(client.database(database_name).collection(collection_nanme))
+            },
+            None => None,
+        }
+        
     }
 }
