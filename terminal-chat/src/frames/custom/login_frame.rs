@@ -1,7 +1,10 @@
 use std::iter::repeat;
 
 use crossterm::style::Color;
+use futures_util::SinkExt;
 use ratatui::{layout::{self, Alignment, Constraint, Layout, Rect}, style::Stylize, widgets::{Block, Borders, Paragraph}, Frame};
+use tokio_tungstenite::{connect_async, tungstenite::Message};
+use url::Url;
 
 use crate::app::App;
 
@@ -111,6 +114,11 @@ impl LoginFrame {
     }
 
     pub async fn submit(&self, app: &mut App) -> std::result::Result<(), String> {
+        let url = Url::parse("ws://127.0.0.1:8080").unwrap();
+        let (socket, _) = connect_async(url).await.expect("Failed to connect to server");
+        app.set_socket(socket);
+
+        app.socket.as_mut().unwrap().send(Message::Text(format!("login:{}:{}", self.username, self.password))).await.expect("Failed to send message");
         Ok(())
     }
 

@@ -1,13 +1,15 @@
 use crossterm::event::{self, Event, KeyCode};
 use ratatui::DefaultTerminal;
+use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 use std::{io::Result, time::Duration};
 
-use crate::widgets::{chat_frame::ChatFrame, login_frame::LoginFrame};
+use crate::frames::custom::{chat_frame::ChatFrame, login_frame::LoginFrame};
 
 pub struct App {
     terminal: DefaultTerminal,
     exit: bool,
     app_state: AppState,
+    pub socket: Option<WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>>,
 }
 
 impl App {
@@ -17,6 +19,7 @@ impl App {
             terminal,
             exit: false,
             app_state: AppState::Login(LoginFrame::new()),
+            socket: None,
         }
     }
 
@@ -37,7 +40,7 @@ impl App {
                 AppState::Chat(ref chat_frame) => {
                     chat_frame.render(frame);
                 }
-                
+                AppState::Register() => todo!(),   
             }
         });
     }
@@ -57,6 +60,7 @@ impl App {
                             AppState::Chat(ref mut chat_frame) => {
                                 chat_frame.input(c);
                             }
+                            AppState::Register() => todo!(),
                         }
                     },
 
@@ -68,6 +72,7 @@ impl App {
                             AppState::Chat(ref mut chat_frame ) => {
                                 chat_frame.change_focus();
                             }
+                            AppState::Register() => todo!(),
                         }
                     },
                     KeyCode::Backspace => {
@@ -78,6 +83,7 @@ impl App {
                             AppState::Chat(ref mut chat_frame) => {
                                 chat_frame.backspace();
                             }
+                            AppState::Register() => todo!(),
                         }
                     },
                     KeyCode::F(1) => {
@@ -88,6 +94,7 @@ impl App {
                             AppState::Chat(ref mut _chat_frame) => {
 
                             }
+                            AppState::Register() => todo!(),
                         }
                     },
                     KeyCode::Enter => {
@@ -108,10 +115,15 @@ impl App {
             }
         }
     }
+
+    pub fn set_socket(&mut self, socket: WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>) {
+        self.socket = Some(socket);
+    }
 }
 
 enum AppState {
     Login(LoginFrame),
+    Register(),
     Chat(ChatFrame),
     
 }

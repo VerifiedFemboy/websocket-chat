@@ -1,7 +1,7 @@
 use app::App;
 
 mod app;
-mod widgets;
+mod frames;
 
 #[tokio::main]
 async fn main() {
