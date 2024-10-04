@@ -1,8 +1,11 @@
 use std::iter::repeat;
 
+use futures_util::SinkExt;
 use ratatui::{layout::{Alignment, Constraint, Direction, Layout, Rect}, style::{Color, Stylize}, widgets::{Block, Borders, Paragraph}};
+use tokio_tungstenite::{connect_async, tungstenite::Message};
+use url::Url;
 
-use crate::frames::custom_frame::CustomFrame;
+use crate::{app::App, frames::custom_frame::CustomFrame};
 
 pub struct RegisterFrame {
     pub username: String,
@@ -69,6 +72,27 @@ impl RegisterFrame {
 
     pub fn toggle_password_visibility(&mut self) {
         self.password_visible = !self.password_visible;
+    }
+
+    fn password_match(&self) -> bool {
+        self.password == self.confirm_password
+    }
+
+    pub async fn submit(&self, app: &mut App) -> std::result::Result<(), String> {
+        if self.username.is_empty() || self.password.is_empty() {
+            return Err("Username and Password cannot be empty".to_string());
+        }
+
+        if !self.password_match() {
+            return Err("Passwords do not match".to_string());
+        }
+
+        let url = Url::parse("ws://127.0.0.1:8080").unwrap();
+        let (socket, _) = connect_async(url).await.expect("Failed to connect to server");
+        app.set_socket(socket);
+
+        app.socket.as_mut().unwrap().send(Message::Text(format!("register:{}:{}", self.username, self.password))).await.expect("Failed to send message");
+        Ok(())
     }
 }
 

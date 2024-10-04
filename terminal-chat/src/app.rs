@@ -101,16 +101,28 @@ impl App {
                         }
                     },
                     KeyCode::Enter => {
-                        if let AppState::Login(ref mut login_frame) = self.app_state {
-                            let mut login_frame = std::mem::take(login_frame);
-                            match login_frame.submit(self).await {
-                                Ok(_) => {
-                                    self.app_state = AppState::Chat(ChatFrame::new());
-                                },
-                                Err(err) => login_frame.error_message = Some(err),
-                            };
-                        } else if let AppState::Chat(ref mut chat_frame) = self.app_state {
-                            chat_frame.submit_message();   
+                        match self.app_state {
+                            AppState::Login(ref mut login_frame) => {
+                                let mut login_frame = std::mem::take(login_frame);
+                                match login_frame.submit(self).await {
+                                    Ok(_) => {
+                                        self.app_state = AppState::Chat(ChatFrame::new());
+                                    },
+                                    Err(err) => login_frame.error_message = Some(err),
+                                };
+                            },
+                            AppState::Chat(ref mut chat_frame) => {
+                                chat_frame.submit_message();
+                            },
+                            AppState::Register(ref mut register_frame) => {
+                                let mut register_frame = std::mem::take(register_frame);
+                                match register_frame.submit(self).await {
+                                    Ok(_) => {
+                                        self.app_state = AppState::Chat(ChatFrame::new());
+                                    },
+                                    Err(err) => register_frame.error_message = Some(err),
+                                };
+                            },
                         }
                     },
                     _ => {}

@@ -45,11 +45,15 @@ impl LoginFrame {
     }
 
     pub async fn submit(&self, app: &mut App) -> std::result::Result<(), String> {
+        if self.username.is_empty() || self.password.is_empty() {
+            return Err("Username and Password cannot be empty".to_string());
+        }
+
         let url = Url::parse("ws://127.0.0.1:8080").unwrap();
         let (socket, _) = connect_async(url).await.expect("Failed to connect to server");
         app.set_socket(socket);
 
-        app.socket.as_mut().unwrap().send(Message::Text(format!("login:{}:{}", self.username, self.password))).await.expect("Failed to send message");
+        app.socket.as_mut().unwrap().send(Message::Text(format!("register:{}:{}", self.username, self.password))).await.expect("Failed to send message");
         Ok(())
     }
 
