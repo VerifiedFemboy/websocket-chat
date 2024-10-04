@@ -6,7 +6,7 @@ use ratatui::{layout::{self, Alignment, Constraint, Layout, Rect}, style::Styliz
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 use url::Url;
 
-use crate::app::App;
+use crate::{app::App, frames::custom_frame::CustomFrame};
 
 pub struct LoginFrame {
     pub username: String,
@@ -28,7 +28,38 @@ impl LoginFrame {
         }
     }
 
-    pub fn render(&self, frame: &mut Frame) {
+    pub fn input(&mut self, c: char) {
+        if self.focus {
+            self.username.push(c);
+        } else {
+            self.password.push(c);
+        }
+    }
+
+    pub fn backspace(&mut self) {
+        if self.focus {
+            self.username.pop();
+        } else {
+            self.password.pop();
+        }
+    }
+
+    pub async fn submit(&self, app: &mut App) -> std::result::Result<(), String> {
+        let url = Url::parse("ws://127.0.0.1:8080").unwrap();
+        let (socket, _) = connect_async(url).await.expect("Failed to connect to server");
+        app.set_socket(socket);
+
+        app.socket.as_mut().unwrap().send(Message::Text(format!("login:{}:{}", self.username, self.password))).await.expect("Failed to send message");
+        Ok(())
+    }
+
+    pub fn toggle_password_visibility(&mut self) {
+        self.password_visible = !self.password_visible;
+    }
+}
+
+impl CustomFrame for LoginFrame {
+    fn render(&self, frame: &mut Frame) {
         let size = frame.area();
             let width = 50;
             let height = 6;
@@ -90,46 +121,17 @@ impl LoginFrame {
                 frame.render_widget(error_text, Rect::new(0, 1, size.width, 1));
             }
 
-            let help_text = Paragraph::new("Press Tab to switch fields, Enter to submit, and F1 to toggle password visibility")
+            let help_text = Paragraph::new("Press Tab to switch fields, Enter to submit, F1 to toggle password visibility and F2 to switch to Register")
             .alignment(Alignment::Center);
 
             let bottom_y = size.height.saturating_sub(1); // Assuming the help text height is 3
             frame.render_widget(help_text, Rect::new(0, bottom_y, size.width, 3));
     }
-
-    pub fn input(&mut self, c: char) {
-        if self.focus {
-            self.username.push(c);
-        } else {
-            self.password.push(c);
-        }
-    }
-
-    pub fn backspace(&mut self) {
-        if self.focus {
-            self.username.pop();
-        } else {
-            self.password.pop();
-        }
-    }
-
-    pub async fn submit(&self, app: &mut App) -> std::result::Result<(), String> {
-        let url = Url::parse("ws://127.0.0.1:8080").unwrap();
-        let (socket, _) = connect_async(url).await.expect("Failed to connect to server");
-        app.set_socket(socket);
-
-        app.socket.as_mut().unwrap().send(Message::Text(format!("login:{}:{}", self.username, self.password))).await.expect("Failed to send message");
-        Ok(())
-    }
-
-    pub fn toggle_password_visibility(&mut self) {
-        self.password_visible = !self.password_visible;
-    }
+    
 }
 
 impl Default for LoginFrame {
     fn default() -> Self {
         Self::new()
     }
-    
 }

@@ -1,8 +1,5 @@
 use ratatui::Frame;
 
-pub struct CustomFrame;
-
-
-pub trait CustomFrameTrait {
+pub trait CustomFrame {
     fn render(&self, frame: &mut Frame);
 }

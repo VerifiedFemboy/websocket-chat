@@ -3,7 +3,7 @@ use ratatui::DefaultTerminal;
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 use std::{io::Result, time::Duration};
 
-use crate::frames::custom::{chat_frame::ChatFrame, login_frame::LoginFrame};
+use crate::frames::{custom::{chat_frame::ChatFrame, login_frame::LoginFrame, register_frame::RegisterFrame}, custom_frame::CustomFrame};
 
 pub struct App {
     terminal: DefaultTerminal,
@@ -40,7 +40,9 @@ impl App {
                 AppState::Chat(ref chat_frame) => {
                     chat_frame.render(frame);
                 }
-                AppState::Register() => todo!(),   
+                AppState::Register(ref register_frame) => {
+                    register_frame.render(frame);
+                },   
             }
         });
     }
@@ -49,7 +51,7 @@ impl App {
         if event::poll(Duration::from_millis(100)).unwrap() {
             if let Event::Key(key_event) = event::read().unwrap() {
                 match key_event.code {
-                    KeyCode::Esc | KeyCode::Char('q') => {
+                    KeyCode::Esc => {
                         self.exit = true;
                     },
                     KeyCode::Char(c) => {
@@ -60,41 +62,42 @@ impl App {
                             AppState::Chat(ref mut chat_frame) => {
                                 chat_frame.input(c);
                             }
-                            AppState::Register() => todo!(),
+                            AppState::Register(ref mut register_frame) => {
+                                register_frame.input(c);
+                            },
                         }
                     },
 
                     KeyCode::Tab => {
                         match self.app_state {
-                            AppState::Login(ref mut login_frame) => {
-                                login_frame.focus = !login_frame.focus;
-                            },
-                            AppState::Chat(ref mut chat_frame ) => {
-                                chat_frame.change_focus();
-                            }
-                            AppState::Register() => todo!(),
+                            AppState::Login(ref mut login_frame) => login_frame.focus = !login_frame.focus,
+                            AppState::Chat(ref mut chat_frame ) => chat_frame.change_focus(),
+                            AppState::Register(ref mut register_frame) => register_frame.change_focus(),
                         }
                     },
                     KeyCode::Backspace => {
                         match self.app_state {
-                            AppState::Login(ref mut login_frame) => {
-                                login_frame.backspace();
-                            },
-                            AppState::Chat(ref mut chat_frame) => {
-                                chat_frame.backspace();
-                            }
-                            AppState::Register() => todo!(),
+                            AppState::Login(ref mut login_frame) => login_frame.backspace(),
+                            AppState::Chat(ref mut chat_frame) => chat_frame.backspace(),
+                            AppState::Register(ref mut register_frame) => register_frame.backspace(),
                         }
                     },
                     KeyCode::F(1) => {
                         match self.app_state {
-                            AppState::Login(ref mut login_frame) => {
-                                login_frame.toggle_password_visibility();
+                            AppState::Login(ref mut login_frame) => login_frame.toggle_password_visibility(),
+                            AppState::Register(ref mut register_frame) => register_frame.toggle_password_visibility(),
+                            AppState::Chat(_) => {}
+                        }
+                    },
+                    KeyCode::F(2) => {
+                        match self.app_state {
+                            AppState::Login(_) => {
+                                self.app_state = AppState::Register(RegisterFrame::new());
                             },
-                            AppState::Chat(ref mut _chat_frame) => {
-
-                            }
-                            AppState::Register() => todo!(),
+                            AppState::Register(_) => {
+                                self.app_state = AppState::Login(LoginFrame::new());
+                            },
+                            _ => {}
                         }
                     },
                     KeyCode::Enter => {
@@ -123,7 +126,7 @@ impl App {
 
 enum AppState {
     Login(LoginFrame),
-    Register(),
+    Register(RegisterFrame),
     Chat(ChatFrame),
     
 }

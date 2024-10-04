@@ -1,5 +1,7 @@
 use ratatui::{layout::{self, Alignment}, style::{Color, Style}, widgets::{Block, Borders, Paragraph}, Frame};
 
+use crate::frames::custom_frame::CustomFrame;
+
 pub struct ChatFrame {
     pub messages: Vec<String>,
     pub input: String,
@@ -16,7 +18,26 @@ impl ChatFrame {
         }
     }
 
-    pub fn render(&self, frame: &mut Frame) {
+    pub fn backspace(&mut self) {
+        self.input.pop();
+    }
+
+    pub fn input(&mut self, c: char) {
+        self.input.push(c);
+    }
+
+    pub fn submit_message(&mut self) {
+        self.messages.push(self.input.clone());
+        self.input.clear();
+    }
+    
+    pub fn change_focus(&mut self) {
+        self.focus = !self.focus;
+    }
+}
+
+impl CustomFrame for ChatFrame {
+    fn render(&self, frame: &mut Frame) {
         let layout = layout::Layout::default()
             .direction(layout::Direction::Vertical)
             .constraints(
@@ -52,22 +73,5 @@ impl ChatFrame {
         frame.render_widget(messages_paragraph, layout[0]);
         frame.render_widget(input_paragraph, layout[1]);
         frame.render_widget(help_paragraph, layout[2]);
-    }
-
-    pub fn backspace(&mut self) {
-        self.input.pop();
-    }
-
-    pub fn input(&mut self, c: char) {
-        self.input.push(c);
-    }
-
-    pub fn submit_message(&mut self) {
-        self.messages.push(self.input.clone());
-        self.input.clear();
-    }
-    
-    pub fn change_focus(&mut self) {
-        self.focus = !self.focus;
     }
 }
