@@ -2,9 +2,9 @@ use mongodb::{bson, error::Error};
 
 use crate::connection::database::Database;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct User {
     pub username: String,
     pub password: String,   
@@ -37,5 +37,18 @@ impl User {
 
         collection.insert_one(user_doc).await?;
         Ok(())
+    }
+
+    pub async fn select_user(database: &Database, user: &User) -> Result<Option<User>, mongodb::error::Error> {
+        let collection = database.get_collection("chat", "users").unwrap();
+        let filter = bson::doc! { "username": &user.username, "password": &user.password };
+        let user = collection.find_one(filter).await?;
+        match user {
+            Some(user) => {
+                let user = bson::from_document(user).unwrap();
+                Ok(Some(user))
+            },
+            None => Ok(None),
+        }
     }
 }

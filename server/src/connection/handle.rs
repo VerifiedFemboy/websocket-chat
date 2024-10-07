@@ -28,7 +28,22 @@ pub async fn handle_connection(stream: TcpStream, database: &Database) {
                 }
             };
         } else if cred[0] == "login" {
-            // Implement login
+            let user = User::from_credentials(&credentials);
+            match User::select_user(database, &user).await {
+                Ok(user) => {
+                    match user {
+                        Some(_) => {
+                            write.send(Message::Text("User logged in".to_string())).await.expect("Failed to send message");
+                        },
+                        None => {
+                            write.send(Message::Text("Invalid credentials".to_string())).await.expect("Failed to send message");
+                        }
+                    }
+                },
+                Err(err) => {
+                    write.send(Message::Text(format!("Failed to login user => \n{err}"))).await.expect("Failed to send message");
+                }
+            };
         }
     }
 }

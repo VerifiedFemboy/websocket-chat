@@ -1,11 +1,13 @@
 use std::iter::repeat;
 
-use futures_util::SinkExt;
+use futures_util::{SinkExt, StreamExt};
 use ratatui::{layout::{Alignment, Constraint, Direction, Layout, Rect}, style::{Color, Stylize}, widgets::{Block, Borders, Paragraph}};
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 use url::Url;
 
-use crate::{app::App, frames::custom_frame::CustomFrame};
+use crate::{app::{App, AppState}, frames::custom_frame::CustomFrame};
+
+use super::chat_frame::ChatFrame;
 
 pub struct RegisterFrame {
     pub username: String,
@@ -92,6 +94,13 @@ impl RegisterFrame {
         app.set_socket(socket);
 
         app.socket.as_mut().unwrap().send(Message::Text(format!("register:{}:{}", self.username, self.password))).await.expect("Failed to send message");
+        
+        if app.socket.as_mut().unwrap().next().await.expect("Failed to receive message").unwrap().to_text().unwrap() == "User registered" {
+            app.change_state(AppState::Chat(ChatFrame::new()));
+        } else {
+            return Err("Failed to register user".to_string());
+        }
+        
         Ok(())
     }
 }

@@ -1,12 +1,14 @@
 use std::iter::repeat;
 
 use crossterm::style::Color;
-use futures_util::SinkExt;
+use futures_util::{SinkExt, StreamExt};
 use ratatui::{layout::{self, Alignment, Constraint, Layout, Rect}, style::Stylize, widgets::{Block, Borders, Paragraph}, Frame};
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 use url::Url;
 
-use crate::{app::App, frames::custom_frame::CustomFrame};
+use crate::{app::{App, AppState}, frames::custom_frame::CustomFrame};
+
+use super::chat_frame::ChatFrame;
 
 pub struct LoginFrame {
     pub username: String,
@@ -53,7 +55,15 @@ impl LoginFrame {
         let (socket, _) = connect_async(url).await.expect("Failed to connect to server");
         app.set_socket(socket);
 
-        app.socket.as_mut().unwrap().send(Message::Text(format!("register:{}:{}", self.username, self.password))).await.expect("Failed to send message");
+        app.socket.as_mut().unwrap().send(Message::Text(format!("register:{}:{}", self.username, self.password)))
+        .await.expect("Failed to send message");
+
+        let response = app.socket.as_mut().unwrap().next().await.expect("Failed to receive message").unwrap();
+        if response.to_text().unwrap() == "User registered" {
+            app.change_state(AppState::Chat(ChatFrame::new()));
+        } else {
+            return Err(response.to_text().unwrap().to_owned());
+        }
         Ok(())
     }
 

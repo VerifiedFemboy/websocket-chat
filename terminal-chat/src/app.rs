@@ -134,9 +134,13 @@ impl App {
     pub fn set_socket(&mut self, socket: WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>) {
         self.socket = Some(socket);
     }
+
+    pub fn change_state(&mut self, state: AppState) {
+        self.app_state = state;
+    }
 }
 
-enum AppState {
+pub enum AppState {
     Login(LoginFrame),
     Register(RegisterFrame),
     Chat(ChatFrame),
