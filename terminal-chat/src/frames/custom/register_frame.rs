@@ -90,7 +90,10 @@ impl RegisterFrame {
         }
 
         let url = Url::parse("ws://127.0.0.1:8080").unwrap();
-        let (socket, _) = connect_async(url).await.expect("Failed to connect to server");
+        let (socket, _) = match connect_async(url).await {
+            Ok(result) => result,
+            Err(e) => return Err(format!("Failed to connect: {}", e)),
+        };
         app.set_socket(socket);
 
         app.socket.as_mut().unwrap().send(Message::Text(format!("register:{}:{}", self.username, self.password))).await.expect("Failed to send message");
