@@ -6,7 +6,7 @@ use ratatui::{layout::{self, Alignment, Constraint, Layout, Rect}, style::Styliz
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 use url::Url;
 
-use crate::{app::{App, AppState}, frames::custom_frame::CustomFrame};
+use crate::{app::{App, AppState}, encrypion, frames::custom_frame::CustomFrame};
 
 use super::chat_frame::ChatFrame;
 
@@ -58,7 +58,8 @@ impl LoginFrame {
         };
         app.set_socket(socket);
 
-        app.socket.as_mut().unwrap().send(Message::Text(format!("register:{}:{}", self.username, self.password)))
+        let encrypted_password = encrypion::encrypt_password(self.password.as_str());
+        app.socket.as_mut().unwrap().send(Message::Text(format!("login:{}:{}", self.username, encrypted_password)))
         .await.expect("Failed to send message");
 
         let response = app.socket.as_mut().unwrap().next().await.expect("Failed to receive message").unwrap();

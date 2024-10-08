@@ -2244,6 +2244,7 @@ dependencies = [
  "futures-util",
  "mongodb",
  "ratatui",
+ "sha2",
  "tokio",
  "tokio-tungstenite",
  "tungstenite 0.24.0",

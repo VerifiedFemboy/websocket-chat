@@ -2,6 +2,7 @@ use app::App;
 
 mod app;
 mod frames;
+mod encrypion;
 
 #[tokio::main]
 async fn main() {
