@@ -130,19 +130,18 @@ impl CustomFrame for LoginFrame {
             .alignment(Alignment::Center);
             frame.render_widget(pass_visibility_info, Rect::new(0, 0, size.width, 1));
             
-
-            if let Some(error_msg) = self.error_message.clone() {
-                let error_text = Paragraph::new(error_msg)
-                    .alignment(Alignment::Center)
-                    .fg(Color::Red);
-                frame.render_widget(error_text, Rect::new(0, 1, size.width, 1));
-            }
-
             let help_text = Paragraph::new("Press Tab to switch fields, Enter to submit, F1 to toggle password visibility and F2 to switch to Register")
             .alignment(Alignment::Center);
 
             let bottom_y = size.height.saturating_sub(1); // Assuming the help text height is 3
             frame.render_widget(help_text, Rect::new(0, bottom_y, size.width, 3));
+    
+            if let Some(error_msg) = self.error_message.clone() {
+                let error_text = Paragraph::new(error_msg)
+                    .alignment(Alignment::Center)
+                    .fg(Color::Red).bold();
+                frame.render_widget(error_text, Rect::new(0, 1, size.width, 1));
+            }
     }
     
 }

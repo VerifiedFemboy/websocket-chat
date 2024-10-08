@@ -190,8 +190,8 @@ impl CustomFrame for RegisterFrame {
             if let Some(error_msg) = self.error_message.clone() {
                 let error_text = Paragraph::new(error_msg)
                     .alignment(Alignment::Center)
-                    .fg(Color::Red);
-                frame.render_widget(error_text, Rect::new(0, 0, size.width, 1));
+                    .fg(Color::Red).bold();
+                frame.render_widget(error_text, Rect::new(0, 1, size.width, 1));
             }
     }
 }

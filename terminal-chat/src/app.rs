@@ -108,7 +108,10 @@ impl App {
                                     Ok(_) => {
                                         self.app_state = AppState::Chat(ChatFrame::new());
                                     },
-                                    Err(err) => login_frame.error_message = Some(err),
+                                    Err(err) => {
+                                        login_frame.error_message = Some(err);
+                                        self.app_state = AppState::Login(login_frame);
+                                    },
                                 };
                             },
                             AppState::Chat(ref mut chat_frame) => {
