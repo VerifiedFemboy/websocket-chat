@@ -120,7 +120,10 @@ impl App {
                                     Ok(_) => {
                                         self.app_state = AppState::Chat(ChatFrame::new());
                                     },
-                                    Err(err) => register_frame.error_message = Some(err),
+                                    Err(err) => {
+                                        register_frame.error_message = Some(err);
+                                        self.app_state = AppState::Register(register_frame);
+                                    },
                                 };
                             },
                         }
