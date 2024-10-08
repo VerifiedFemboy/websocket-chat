@@ -24,6 +24,7 @@ impl Database {
         })
     }
 
+    #[allow(dead_code)]
     pub fn get_database(&self, database_name: &str) -> Option<mongodb::Database> {
         match &self.client {
             Some(client) => {

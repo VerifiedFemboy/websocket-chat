@@ -12,6 +12,7 @@ pub async fn handle_connection(stream: TcpStream, database: &Database) {
 
     let (mut write, mut read) = ws_stream.split();
 
+    write.send(Message::Text("Connected to server".to_string())).await.expect("Failed to send message");
     if let Some(Ok(Message::Text(credentials))) = read.next().await {
         let cloned_credentials = credentials.clone();
 

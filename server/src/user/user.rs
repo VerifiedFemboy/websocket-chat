@@ -11,12 +11,6 @@ pub struct User {
 }
 
 impl User {
-    pub fn new(username: String, password: String) -> Self {
-        Self {
-            username,
-            password,
-        }
-    }
     pub fn from_credentials(credentials: &str) -> Self {
         let credentials: Vec<&str> = credentials.split(":").collect();
         Self {
