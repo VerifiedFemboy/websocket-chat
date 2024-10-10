@@ -52,10 +52,19 @@ impl LoginFrame {
         }
 
         let url = Url::parse("ws://127.0.0.1:8080").unwrap();
-        let (socket, _) = match connect_async(url).await {
+        let (mut socket, _) = match connect_async(url).await {
             Ok(result) => result,
             Err(e) => return Err(format!("Failed to connect: {}", e)),
         };
+
+        if let Some(Ok(Message::Text(response))) = socket.next().await {
+            if response != "connection:success" {
+            return Err("Failed to establish connection".to_string());
+            }
+        } else {
+            return Err("Failed to receive connection confirmation".to_string());
+        }
+        
         app.set_socket(socket);
 
         let encrypted_password = encrypion::encrypt_password(self.password.as_str());
@@ -63,7 +72,7 @@ impl LoginFrame {
         .await.expect("Failed to send message");
 
         let response = app.socket.as_mut().unwrap().next().await.expect("Failed to receive message").unwrap();
-        if response.to_text().unwrap() == "User registered" {
+        if response.to_text().unwrap() == "login:success" {
             app.change_state(AppState::Chat(ChatFrame::new()));
         } else {
             return Err(response.to_text().unwrap().to_owned());

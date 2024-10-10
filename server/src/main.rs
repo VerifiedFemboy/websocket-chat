@@ -12,7 +12,7 @@ mod user;
 async fn main() {
     
     let server = TcpListener::bind(ADRESS).await.unwrap();   
-    let database = Database::new("mongodb://localhost:27017".to_string());
+    let database = Database::new("mongodb://admin:password@localhost:27017".to_string());
 
     match database.connect().await {
         Ok(db) => {

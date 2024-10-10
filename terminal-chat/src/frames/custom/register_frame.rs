@@ -90,21 +90,32 @@ impl RegisterFrame {
         }
 
         let url = Url::parse("ws://127.0.0.1:8080").unwrap();
-        let (socket, _) = match connect_async(url).await {
+        let (mut socket, _) = match connect_async(url).await {
             Ok(result) => result,
             Err(e) => return Err(format!("Failed to connect: {}", e)),
         };
+
+        if let Some(Ok(Message::Text(response))) = socket.next().await {
+            if response != "connection:success" {
+            return Err("Failed to establish connection".to_string());
+            }
+        } else {
+            return Err("Failed to receive connection confirmation".to_string());
+        }
         app.set_socket(socket);
 
         let encrypted_password = encrypion::encrypt_password(self.password.as_str());
         app.socket.as_mut().unwrap().send(Message::Text(format!("register:{}:{}", self.username, encrypted_password))).await.expect("Failed to send message");
         
-        if app.socket.as_mut().unwrap().next().await.expect("Failed to receive message").unwrap().to_text().unwrap() == "User registered" {
+        if let Some(Ok(Message::Text(response))) = app.socket.as_mut().unwrap().next().await {
+            if response == "register:success" {
             app.change_state(AppState::Chat(ChatFrame::new()));
-        } else {
+            } else {
             return Err("Failed to register user".to_string());
+            }
+        } else {
+            return Err("Failed to receive message".to_string());
         }
-        
         Ok(())
     }
 }
