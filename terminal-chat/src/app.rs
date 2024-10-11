@@ -10,6 +10,7 @@ pub struct App {
     exit: bool,
     app_state: AppState,
     pub socket: Option<WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>>,
+    pub username: String,
 }
 
 impl App {
@@ -20,6 +21,7 @@ impl App {
             exit: false,
             app_state: AppState::Login(LoginFrame::new()),
             socket: None,
+            username: String::new(),
         }
     }
 
@@ -106,7 +108,9 @@ impl App {
                                 let mut login_frame = std::mem::take(login_frame);
                                 match login_frame.submit(self).await {
                                     Ok(_) => {
-                                        self.app_state = AppState::Chat(ChatFrame::new());
+                                        let chat_frame = ChatFrame::new();
+                                        self.username = login_frame.username;
+                                        self.app_state = AppState::Chat(chat_frame);
                                     },
                                     Err(err) => {
                                         login_frame.error_message = Some(err);
@@ -115,13 +119,17 @@ impl App {
                                 };
                             },
                             AppState::Chat(ref mut chat_frame) => {
-                                chat_frame.submit_message();
+                                let mut mem_chat = std::mem::take(chat_frame);
+                                mem_chat.submit_message(self).await;
+                                self.app_state = AppState::Chat(mem_chat);
                             },
                             AppState::Register(ref mut register_frame) => {
                                 let mut register_frame = std::mem::take(register_frame);
                                 match register_frame.submit(self).await {
                                     Ok(_) => {
-                                        self.app_state = AppState::Chat(ChatFrame::new());
+                                        let chat_frame = ChatFrame::new();
+                                        self.username = register_frame.username;
+                                        self.app_state = AppState::Chat(chat_frame);
                                     },
                                     Err(err) => {
                                         register_frame.error_message = Some(err);
