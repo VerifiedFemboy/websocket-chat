@@ -52,7 +52,7 @@ impl LoginFrame {
         }
 
         let url = Url::parse("ws://127.0.0.1:8080").unwrap();
-        let (mut socket, _) = match connect_async(url).await {
+        let (mut socket, _) = match connect_async(url.as_str()).await {
             Ok(result) => result,
             Err(e) => return Err(format!("Failed to connect: {}", e)),
         };

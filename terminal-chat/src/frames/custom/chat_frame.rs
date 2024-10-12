@@ -33,43 +33,64 @@ impl ChatFrame {
     }
 
     pub async fn submit_message(&mut self, app: &mut App) {
-        
-        match self.submit_message_to_server(app.username.clone(), self.input.clone(), app).await {
-            Some(msg) => {
+        let username = app.username.clone();
+        let input_message = self.input.clone();
+    
+        match self.submit_message_to_server(username, input_message, app).await {
+            Ok(msg) => {
                 self.messages.push(msg);
                 self.input.clear();
             },
-            None => self.input = "Failed to send message".to_string(),
+            Err(err) => {
+                eprintln!("Error submitting message: {err}");
+            },
         }
     }
+
+    //TODO: Implement receive_message in a loop
+    pub async fn receive_message(&mut self, app: &mut App) {
+        let socket = app.socket.as_mut().unwrap();
     
+        if let Some(Ok(Message::Text(res))) = socket.next().await {
+            let response: Vec<&str> = res.split(':').collect();
+            if response.len() == 3 && response[0] == "msg" {
+                let username = response[1];
+                let message = response[2];
+                let msg = format!("{username} > {message}");
+                self.messages.push(msg);
+            } else {
+                eprintln!("Invalid response format");
+            }
+        }
+    }
+
     pub fn change_focus(&mut self) {
         self.focus = !self.focus;
     }
 
-    async fn submit_message_to_server(&self, username: String, message: String, app: &mut App) -> Option<String> {
+    async fn submit_message_to_server(&self, username: String, message: String, app: &mut App) -> Result<String, String> {
         let socket = app.socket.as_mut().unwrap();
     
         match socket.send(Message::Text(format!("msg:{}:{}", username, message))).await {
             Ok(_) => {
                 if let Some(Ok(Message::Text(res))) = socket.next().await {
-                    let res_cloned = res.clone();
-                    let split = res_cloned.split(":");
-                    let response = split.collect::<Vec<&str>>();
-                    if response[0] == "msg" {
+                    let response: Vec<&str> = res.split(':').collect();
+                    if response.len() == 3 && response[0] == "msg" {
                         let username = response[1];
                         let message = response[2];
-        
                         let msg = format!("{username} > {message}");
-                        return Some(msg);
+                        return Ok(msg);
+                    } else {
+                        return Err("Invalid response format".to_string());
                     }
-                } 
+                }
             },
-            Err(_) => return None,
+            Err(err) => return Err(format!("Failed to send message => {err}")),
         }
-        
-        None
+    
+        Err("Failed to send message".to_string())
     }
+    
 }
 
 impl CustomFrame for ChatFrame {

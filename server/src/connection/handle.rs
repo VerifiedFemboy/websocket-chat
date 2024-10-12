@@ -12,13 +12,14 @@ pub async fn handle_connection(stream: TcpStream, database: &Database) {
 
     let (mut write, mut read) = ws_stream.split();
 
+
     match write.send(Message::Text("connection:success".to_string())).await {
         Ok(_) => {
             if let Some(Ok(Message::Text(credentials))) = read.next().await {
                 let cloned_credentials = credentials.clone();
-                // println!("Credentials: {}", credentials);
                 let split = cloned_credentials.split(":");
                 let cred = split.collect::<Vec<&str>>();
+
                 if cred[0] == "register" {
                     let user = User::from_credentials(&credentials);
                     match User::insert_user(database, &user).await {
@@ -55,7 +56,7 @@ pub async fn handle_connection(stream: TcpStream, database: &Database) {
         }
     };
 
-    if let Some(Ok(Message::Text(message))) = read.next().await {
+    while let Some(Ok(Message::Text(message))) = read.next().await {
         let split = message.split(":");
         let msg = split.collect::<Vec<&str>>();
         if msg[0] == "msg" {
@@ -66,5 +67,4 @@ pub async fn handle_connection(stream: TcpStream, database: &Database) {
             write.send(Message::Text(response)).await.expect("Failed to send message");
         }
     }
-    
 }

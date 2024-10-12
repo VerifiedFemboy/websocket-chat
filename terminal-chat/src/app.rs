@@ -8,7 +8,7 @@ use crate::frames::{custom::{chat_frame::ChatFrame, login_frame::LoginFrame, reg
 pub struct App {
     terminal: DefaultTerminal,
     exit: bool,
-    app_state: AppState,
+    pub app_state: AppState,
     pub socket: Option<WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>>,
     pub username: String,
 }
@@ -158,5 +158,4 @@ pub enum AppState {
     Login(LoginFrame),
     Register(RegisterFrame),
     Chat(ChatFrame),
-    
 }
