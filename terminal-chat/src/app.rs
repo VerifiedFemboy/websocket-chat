@@ -29,6 +29,7 @@ impl App {
         while !self.exit {
             self.render_tui();
             self.handle_input().await;
+            // self.connection(); How I could implement this to thread without cloning?!?!?! I give up
         }
         Ok(())
     }
@@ -152,6 +153,16 @@ impl App {
     pub fn change_state(&mut self, state: AppState) {
         self.app_state = state;
     }
+
+    async fn connection(&mut self) {
+            match &mut self.app_state {
+                AppState::Chat(ref mut chat_frame) => {
+                    let mut mem_chat = std::mem::take(chat_frame);
+                    mem_chat.receive_message(self).await;
+                },
+                _ => {}
+            }
+        }
 }
 
 pub enum AppState {

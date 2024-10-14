@@ -37,9 +37,8 @@ impl ChatFrame {
         let input_message = self.input.clone();
     
         match self.submit_message_to_server(username, input_message, app).await {
-            Ok(msg) => {
-                self.messages.push(msg);
-                self.input.clear();
+            Ok(_) => {
+                
             },
             Err(err) => {
                 eprintln!("Error submitting message: {err}");
@@ -49,15 +48,14 @@ impl ChatFrame {
 
     //TODO: Implement receive_message in a loop
     pub async fn receive_message(&mut self, app: &mut App) {
-        let socket = app.socket.as_mut().unwrap();
-    
-        if let Some(Ok(Message::Text(res))) = socket.next().await {
+        if app.socket.is_none() {
+            return;
+        }
+
+        while let Some(Ok(Message::Text(res))) = app.socket.as_mut().unwrap().next().await {
             let response: Vec<&str> = res.split(':').collect();
             if response.len() == 3 && response[0] == "msg" {
-                let username = response[1];
-                let message = response[2];
-                let msg = format!("{username} > {message}");
-                self.messages.push(msg);
+                self.messages.push(format!("{} > {}", response[1], response[2]));
             } else {
                 eprintln!("Invalid response format");
             }
@@ -76,10 +74,7 @@ impl ChatFrame {
                 if let Some(Ok(Message::Text(res))) = socket.next().await {
                     let response: Vec<&str> = res.split(':').collect();
                     if response.len() == 3 && response[0] == "msg" {
-                        let username = response[1];
-                        let message = response[2];
-                        let msg = format!("{username} > {message}");
-                        return Ok(msg);
+                        return Ok("Message sent".to_string());
                     } else {
                         return Err("Invalid response format".to_string());
                     }
