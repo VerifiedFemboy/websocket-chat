@@ -74,7 +74,7 @@ impl LoginFrame {
         let response = app.socket.as_mut().unwrap().next().await.expect("Failed to receive message").unwrap();
         if response.to_text().unwrap() == "login:success" {
             let chat_frame = ChatFrame::new();
-            chat_frame.clone().username = self.username.clone();
+            app.username = self.username.clone();
             app.change_state(AppState::Chat(chat_frame));
         } else {
             return Err(response.to_text().unwrap().to_owned());

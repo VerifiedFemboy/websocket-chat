@@ -7,7 +7,6 @@ use crate::{app::App, frames::custom_frame::CustomFrame};
 
 #[derive(Debug, Clone)]
 pub struct ChatFrame {
-    pub username: String,
     pub messages: Vec<String>,
     pub input: String,
     pub focus: bool,
@@ -17,7 +16,6 @@ impl ChatFrame {
 
     pub fn new() -> Self {
         Self {
-            username: String::new(),
             messages: Vec::new(),
             input: String::new(),
             focus: false,
@@ -132,7 +130,6 @@ impl CustomFrame for ChatFrame {
 impl Default for ChatFrame {
     fn default() -> Self {
         Self {
-            username: String::new(),
             messages: Vec::new(),
             input: String::new(),
             focus: false,

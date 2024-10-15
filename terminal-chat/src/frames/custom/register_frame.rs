@@ -110,7 +110,7 @@ impl RegisterFrame {
         if let Some(Ok(Message::Text(response))) = app.socket.as_mut().unwrap().next().await {
             if response == "register:success" {
                 let chat_frame = ChatFrame::new();
-                chat_frame.clone().username = self.username.clone();
+                app.username = self.username.clone();
                 app.change_state(AppState::Chat(chat_frame));
             } else {
                 return Err(response);
